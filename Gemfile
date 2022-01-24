@@ -22,6 +22,8 @@ gem "minima", "~> 2.0"
 group :jekyll_plugins do
    gem "jekyll-feed", "~> 0.16.0"
    gem 'webrick', '~> 1.7'
+   gem 'jekyll-admin', '~> 0.11.0'
+   gem 'jekyll-multiple-languages-plugin', '~> 1.8'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

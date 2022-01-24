@@ -1,0 +1,9 @@
+global:
+  arabic: العربية
+  english: English
+  dir: rtl
+pages:
+  home: الرئيسية
+titles:
+  home: "الرئيسية"
+  about: "عنّي"

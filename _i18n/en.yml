@@ -1,0 +1,9 @@
+global:
+  arabic: Arabic
+  english: English
+  dir: ltr
+pages:
+  home: Home
+titles:
+  home: "Home"
+  about: "About"
