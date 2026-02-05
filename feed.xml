@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.1">Jekyll</generator><link href="https://mofadlalla.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://mofadlalla.io/" rel="alternate" type="text/html" /><updated>2026-02-05T11:37:54+00:00</updated><id>https://mofadlalla.io/feed.xml</id><title type="html">Mohamed Fadlalla</title><subtitle>The engineering blog and portfolio of Mohamed Fadlalla.  Software Engineer at Google by day, Indie Hacker by night.  Writing about System Design, Cloud-Native Architecture, and building high-performance SaaS tools.
+</subtitle><entry><title type="html">The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer</title><link href="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html" rel="alternate" type="text/html" title="The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer" /><published>2025-08-21T04:08:00+00:00</published><updated>2025-08-21T04:08:00+00:00</updated><id>https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292</id><content type="html" xml:base="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html"><![CDATA[<p>Ever needed to generate a PDF invoice, a report, or an e-ticket from your web application? It’s a common requirement, but turning dynamic HTML into a pixel-perfect PDF can be surprisingly tricky.</p>
+
+<p>In this guide, we’ll walk you through the entire process of building a robust PDF generation script using Node.js and Puppeteer, a powerful headless browser tool. We’ll cover the basics and also touch on the real-world challenges you might face in a production environment.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>Before we begin, make sure you have <strong>Node.js</strong> (version 18 or higher) and <strong>npm</strong> installed on your machine.</p>
+
+<hr />
+
+<h2 id="step-1-setting-up-your-project">Step 1: Setting Up Your Project</h2>
+
+<p>First, let’s create a new project directory and initialize it with a <code class="language-plaintext highlighter-rouge">package.json</code> file.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>pdf-generator
+<span class="nb">cd </span>pdf-generator
+npm init <span class="nt">-y</span>
+</code></pre></div></div>
+
+<p>Next, we need to install Puppeteer. This package will download a recent version of Chromium that we can control programmatically.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install </span>puppeteer
+</code></pre></div></div>
+
+<h2 id="step-2-the-core-pdf-generation-logic">Step 2: The Core PDF Generation Logic</h2>
+
+<p>Now for the fun part. Create a file named generate.js and add the following code. This script defines a function that takes a string of HTML, launches a headless browser, and saves the rendered content as a PDF.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// generate.js</span>
+<span class="k">import</span> <span class="nx">puppeteer</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">puppeteer</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">fs</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">fs</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="c1">// Example HTML content for an invoice</span>
+<span class="kd">const</span> <span class="nx">invoiceHtml</span> <span class="o">=</span> <span class="s2">`
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      body { font-family: Arial, sans-serif; margin: 40px; }
+      .invoice-header { text-align: center; margin-bottom: 40px; }
+      .invoice-header h1 { margin: 0; }
+      .item-table { width: 100%; border-collapse: collapse; }
+      .item-table th, .item-table td { border: 1px solid #ddd; padding: 8px; }
+      .item-table th { background-color: #f2f2f2; }
+      .total { text-align: right; margin-top: 20px; font-weight: bold; }
+    &lt;/style&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div class="invoice-header"&gt;
+      &lt;h1&gt;Invoice #123&lt;/h1&gt;
+      &lt;p&gt;Issued: August 20, 2025&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;table class="item-table"&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;&lt;th&gt;Item&lt;/th&gt;&lt;th&gt;Quantity&lt;/th&gt;&lt;th&gt;Price&lt;/th&gt;&lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        &lt;tr&gt;&lt;td&gt;Web Development Services&lt;/td&gt;&lt;td&gt;10&lt;/td&gt;&lt;td&gt;$150.00&lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td&gt;API Consulting&lt;/td&gt;&lt;td&gt;5&lt;/td&gt;&lt;td&gt;$200.00&lt;/td&gt;&lt;/tr&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+    &lt;div class="total"&gt;
+      Total: $2500.00
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+`</span><span class="p">;</span>
+
+<span class="k">async</span> <span class="kd">function</span> <span class="nx">generatePdfFromHtml</span><span class="p">(</span><span class="nx">htmlContent</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">browser</span><span class="p">;</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Launching browser...</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nx">browser</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">puppeteer</span><span class="p">.</span><span class="nx">launch</span><span class="p">();</span>
+
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Opening new page...</span><span class="dl">'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">page</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Setting page content...</span><span class="dl">'</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">setContent</span><span class="p">(</span><span class="nx">htmlContent</span><span class="p">,</span> <span class="p">{</span> <span class="na">waitUntil</span><span class="p">:</span> <span class="dl">'</span><span class="s1">networkidle0</span><span class="dl">'</span> <span class="p">});</span>
+
+    <span class="c1">// To ensure all assets like fonts or images are loaded</span>
+    <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">emulateMediaType</span><span class="p">(</span><span class="dl">'</span><span class="s1">print</span><span class="dl">'</span><span class="p">);</span>
+
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Generating PDF...</span><span class="dl">'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">pdfBuffer</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">pdf</span><span class="p">({</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">'</span><span class="s1">A4</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">printBackground</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">});</span>
+
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Saving PDF...</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="dl">'</span><span class="s1">invoice.pdf</span><span class="dl">'</span><span class="p">,</span> <span class="nx">pdfBuffer</span><span class="p">);</span>
+
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">PDF generated successfully: invoice.pdf</span><span class="dl">'</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Error generating PDF:</span><span class="dl">'</span><span class="p">,</span> <span class="nx">error</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">browser</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Closing browser...</span><span class="dl">'</span><span class="p">);</span>
+      <span class="k">await</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="nx">generatePdfFromHtml</span><span class="p">(</span><span class="nx">invoiceHtml</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>You can run the script from your teminal:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node generate.js
+</code></pre></div></div>
+
+<p>After a few moments, you’ll have a beautifully rendered <code class="language-plaintext highlighter-rouge">invoice.pdf</code> in your project folder!</p>
+
+<h2 id="step-3-optimizing-for-performance-from-cold-to-warm-starts">Step 3: Optimizing for Performance: From Cold to Warm Starts</h2>
+
+<p>Your <code class="language-plaintext highlighter-rouge">generate.js</code> script is a great starting point, but it has a major performance bottleneck: it launches a new browser instance for every single PDF. This “cold start” can take several seconds and is very inefficient for a real application like a web server.</p>
+
+<p>Let’s refactor our code to use a “warm,” singleton browser instance that is launched once and reused for all subsequent requests.</p>
+
+<p>First, let’s turn our logic into an Express server. If you haven’t already, install Express:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install </span>express
+</code></pre></div></div>
+
+<p>Now, create an <code class="language-plaintext highlighter-rouge">server.js</code> file:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// server.js</span>
+<span class="k">import</span> <span class="nx">express</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">express</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">puppeteer</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">puppeteer</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span> <span class="c1">// Middleware to parse JSON bodies</span>
+
+<span class="kd">let</span> <span class="nx">browser</span><span class="p">;</span> <span class="c1">// We'll hold the browser instance here</span>
+
+<span class="c1">// This is an async IIFE (Immediately Invoked Function Expression)</span>
+<span class="c1">// to launch the browser at the start.</span>
+<span class="p">(</span><span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Launching a warm browser instance...</span><span class="dl">'</span><span class="p">);</span>
+  <span class="nx">browser</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">puppeteer</span><span class="p">.</span><span class="nx">launch</span><span class="p">({</span>
+    <span class="na">headless</span><span class="p">:</span> <span class="dl">'</span><span class="s1">new</span><span class="dl">'</span><span class="p">,</span>
+    <span class="c1">// Important for running in Docker</span>
+    <span class="na">args</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">--no-sandbox</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">--disable-setuid-sandbox</span><span class="dl">'</span><span class="p">],</span>
+  <span class="p">});</span>
+<span class="p">})();</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="dl">'</span><span class="s1">/convert</span><span class="dl">'</span><span class="p">,</span> <span class="k">async</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">browser</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">503</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="dl">'</span><span class="s1">Browser is not ready.</span><span class="dl">'</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="kd">const</span> <span class="p">{</span> <span class="nx">html</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">html</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">400</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="dl">'</span><span class="s1">HTML content is required.</span><span class="dl">'</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="kd">const</span> <span class="nx">page</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">browser</span><span class="p">.</span><span class="nx">newPage</span><span class="p">();</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">setContent</span><span class="p">(</span><span class="nx">html</span><span class="p">,</span> <span class="p">{</span> <span class="na">waitUntil</span><span class="p">:</span> <span class="dl">'</span><span class="s1">networkidle0</span><span class="dl">'</span> <span class="p">});</span>
+    <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">emulateMediaType</span><span class="p">(</span><span class="dl">'</span><span class="s1">print</span><span class="dl">'</span><span class="p">);</span>
+
+    <span class="kd">const</span> <span class="nx">pdfBuffer</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">pdf</span><span class="p">({</span>
+      <span class="na">format</span><span class="p">:</span> <span class="dl">'</span><span class="s1">A4</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">printBackground</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">});</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">contentType</span><span class="p">(</span><span class="dl">'</span><span class="s1">application/pdf</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">pdfBuffer</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Error generating PDF:</span><span class="dl">'</span><span class="p">,</span> <span class="nx">error</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="dl">'</span><span class="s1">Failed to generate PDF.</span><span class="dl">'</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="nx">page</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">// IMPORTANT: Only close the page, not the browser</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">PORT</span> <span class="o">=</span> <span class="mi">3000</span><span class="p">;</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">PORT</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">`PDF generation server listening on port </span><span class="p">${</span><span class="nx">PORT</span><span class="p">}</span><span class="s2">`</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>By moving <code class="language-plaintext highlighter-rouge">puppeteer.launch()</code> outside the request handler, we’ve eliminated the cold start. Now, each call to <code class="language-plaintext highlighter-rouge">/convert</code> is significantly faster.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Generating PDFs from HTML doesn’t have to be a headache. By leveraging Puppeteer, you gain the full power of a modern browser to render your documents exactly as they appear on the web. We’ve moved from a basic script to a high-performance Express server, setting a solid foundation for any production environment.</p>
+
+<p>From here, you can explore adding custom headers and footers, handling complex CSS layouts, or even integrating this service into a larger microservices architecture. Happy coding!</p>]]></content><author><name></name></author><summary type="html"><![CDATA[The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer Posted on:...]]></summary></entry></feed>
