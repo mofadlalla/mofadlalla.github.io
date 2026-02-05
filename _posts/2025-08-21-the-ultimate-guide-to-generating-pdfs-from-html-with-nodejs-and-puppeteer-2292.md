@@ -193,3 +193,9 @@ app.listen(PORT, () => {
 ```
 
 By moving `puppeteer.launch()` outside the request handler, we've eliminated the cold start. Now, each call to `/convert` is significantly faster.
+
+## Conclusion
+
+Generating PDFs from HTML doesn't have to be a headache. By leveraging Puppeteer, you gain the full power of a modern browser to render your documents exactly as they appear on the web. We've moved from a basic script to a high-performance Express server, setting a solid foundation for any production environment.
+
+From here, you can explore adding custom headers and footers, handling complex CSS layouts, or even integrating this service into a larger microservices architecture. Happy coding!
