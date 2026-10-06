@@ -25,6 +25,10 @@ twitter_username: mofadlalla
 github_username: mofadlalla
 linkedin_username: mofadlalla
 
+# Analytics
+umami:
+  website_id: "8fc720d0-5da8-40fd-a1e9-2713fb0735ee"
+
 # Build settings
 markdown: kramdown
 theme: minima
