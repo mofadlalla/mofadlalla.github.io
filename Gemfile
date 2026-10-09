@@ -28,6 +28,7 @@ group :jekyll_plugins do
    gem "jekyll-feed", "~> 0.16.0"
    gem 'webrick', '~> 1.8'
    gem 'jekyll-admin', '~> 0.11.0'
+   gem 'rack', '< 3'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
