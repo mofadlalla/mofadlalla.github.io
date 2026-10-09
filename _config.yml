@@ -37,3 +37,7 @@ plugins:
 exclude:
   - Gemfile
   - Gemfile.lock
+
+# Jekyll Admin
+jekyll_admin:
+  homepage: "posts"
