@@ -1,5 +1,179 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.1">Jekyll</generator><link href="https://mofadlalla.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://mofadlalla.io/" rel="alternate" type="text/html" /><updated>2026-10-09T22:11:11+00:00</updated><id>https://mofadlalla.io/feed.xml</id><title type="html">Mohamed Fadlalla</title><subtitle>The engineering blog and portfolio of Mohamed Fadlalla.  Software Engineer at Google by day, Indie Hacker by night.  Writing about System Design, Cloud-Native Architecture, and building high-performance SaaS tools.
-</subtitle><entry><title type="html">The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer</title><link href="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html" rel="alternate" type="text/html" title="The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer" /><published>2025-08-21T04:08:00+00:00</published><updated>2025-08-21T04:08:00+00:00</updated><id>https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292</id><content type="html" xml:base="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html"><![CDATA[<p>Ever needed to generate a PDF invoice, a report, or an e-ticket from your web application? It’s a common requirement, but turning dynamic HTML into a pixel-perfect PDF can be surprisingly tricky.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.1">Jekyll</generator><link href="https://mofadlalla.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://mofadlalla.io/" rel="alternate" type="text/html" /><updated>2026-10-10T01:02:52+00:00</updated><id>https://mofadlalla.io/feed.xml</id><title type="html">Mohamed Fadlalla</title><subtitle>The engineering blog and portfolio of Mohamed Fadlalla.  Software Engineer at Google by day, Indie Hacker by night.  Writing about System Design, Cloud-Native Architecture, and building high-performance SaaS tools.
+</subtitle><entry><title type="html">The Evil of Optional Parameters: When Having too Many Options is Self Destructing</title><link href="https://mofadlalla.io/2026/10/10/the-evil-of-optional-parameters-when-having-too-many-options-is-self-destructing.html" rel="alternate" type="text/html" title="The Evil of Optional Parameters: When Having too Many Options is Self Destructing" /><published>2026-10-10T00:50:00+00:00</published><updated>2026-10-10T00:50:00+00:00</updated><id>https://mofadlalla.io/2026/10/10/the-evil-of-optional-parameters-when-having-too-many-options-is-self-destructing</id><content type="html" xml:base="https://mofadlalla.io/2026/10/10/the-evil-of-optional-parameters-when-having-too-many-options-is-self-destructing.html"><![CDATA[<p>You are the main developer of agents.com, an app that lets an organization manage an army of AI agents. You’re designing an admin page where an admin within an org can see each agent and the skills associated with them. You write this beautiful, simple function that takes an <code class="language-plaintext highlighter-rouge">orgId</code> and <code class="language-plaintext highlighter-rouge">agentId</code> and returns a list of skills:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(orgId: string, agentId: string): AgentSkill[] {
+  // fetches all of the skills from the server
+}
+</code></pre></div></div>
+
+<p>The skills page needs to show some metadata along with the list of skills. For example, we need to show the name of the agent, the date they were created, and their specialties. Because of this, we make a small change to the return type of this function:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
+  agent: Agent;
+  skills: Skill[];
+}
+
+function getAgentSkills(orgId: string, agentId: string): AgentSkillsResponse {
+  // Some API calls
+}
+</code></pre></div></div>
+
+<p>So far, so good! The page looks great, and admins are happy tracking their agents’ contributions.
+<br /></p>
+<h3 id="the-original-sin-of-convenience">The Original Sin of Convenience</h3>
+<p>The agent section contains more than just a list of skills. You have independent pages for tasks, relations, and a high-level overview page. On the overview page, you want to show the top five agent skills.</p>
+
+<p>However, you really don’t want to return the <code class="language-plaintext highlighter-rouge">agent</code> object with the response here because you already have the agent information handy in the state, and you want to save yourself a heavy database join in your backend.</p>
+
+<p>So, what do you do? You commit the first sin. You add a boolean optional parameter <code class="language-plaintext highlighter-rouge">includeAgent</code>. It defaults to true, and the overview page caller can just set it to false. Here is how your function looks now:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
+  orgId: string,
+  agentId: string,
+  includeAgent?: boolean = true
+): AgentSkillsResponse {
+  // fetches skills and includes agent conditionally
+}
+</code></pre></div></div>
+<p>But wait, you also need to update the function return type because the agent is now optional:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
+  agent?: Agent;
+  skills: Skill[];
+}
+</code></pre></div></div>
+<p>Not bad, right? We’ll see.
+<br /></p>
+<h3 id="descending-deeper-the-second-offense">Descending Deeper: The Second Offense</h3>
+<p>Months later, your app is doing great. You are getting feature requests left and right. You need help, so you hire a new developer.</p>
+
+<p>The first feature they work on is the UI for “deleted” agents. When an agent is deleted, you free up their username so new agents can use it. But new agents can be deleted as well! Your backend has a clever solution for this: you store a <code class="language-plaintext highlighter-rouge">deletionTimeStamp</code> to identify multiple agents deleted with the exact same username.</p>
+
+<p>Your new developer wants to support showing skills for deleted agents on the skills page. What do they do? They pass a <code class="language-plaintext highlighter-rouge">deletedAt</code> param into your existing function. Because of data retention regulations, you don’t store a lot of information about deleted agents, so the response shape is a bit different.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
+  agent?: Agent;
+  deletedAgent?: DeletedAgent;
+  skills: Skill[];
+}
+
+function getAgentSkills(
+  orgId: string,
+  agentId: string,
+  includeAgent?: boolean = true,
+  deletedAt?: DateTime,
+): AgentSkillsResponse {
+  // fetches skills and includes agent conditionally
+}
+</code></pre></div></div>
+<p>Look closely at this function. The good news is that it returns a list of skills. But does it include an active agent or a deleted agent? Only God knows. Even worse, an agent cannot be active and deleted at the same time. What happens when someone passes <code class="language-plaintext highlighter-rouge">includeAgent=true</code> and <code class="language-plaintext highlighter-rouge">deletedAt=Date(SOME_DATE)</code> ? The function signature allows an impossible state.
+<br /></p>
+
+<h3 id="knocking-on-hells-door">Knocking on Hell’s Door</h3>
+<p>As your business grows, you start allowing users to have more control over agents. However, this feature is only rolled out to an allowlisted set of users for A/B testing. You call this feature <code class="language-plaintext highlighter-rouge">AgentControl</code>.</p>
+
+<p>When this feature is enabled, you expect the agent object to include more attributes—for example, <code class="language-plaintext highlighter-rouge">allowed_tools</code>, <code class="language-plaintext highlighter-rouge">memory_config</code>, and <code class="language-plaintext highlighter-rouge">guardrail_profile_id</code>. So, you add another optional parameter.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
+  orgId: string,
+  agentId: string,
+  includeAgent?: boolean = true,
+  deletedAt?: DateTime,
+  isAgentControlEnabled: boolean = false,
+): AgentSkillsResponse {
+  // fetches skills and includes agent conditionally
+}
+</code></pre></div></div>
+
+<p>Keep in mind, the <code class="language-plaintext highlighter-rouge">isAgentControlEnabled</code> param is only relevant when fetching active agents. Deleted agents will always return the minimum response. This function already looks terrible, but there’s no turning back now.</p>
+
+<h3 id="if-youre-going-through-hell-keep-going">If You’re Going Through Hell, Keep Going</h3>
+<p>Believe it or not, there are cases where optional parameters actually seem completely justified. Your skills service is heavily cached. When a new skill is added in the UI, or when the user clicks a manual refresh button, you want to invalidate the cache and force loading fresh data.</p>
+
+<p>What do you do to our function? I think you know the answer by now.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
+  orgId: string,
+  agentId: string,
+  includeAgent?: boolean = true,
+  deletedAt?: DateTime,
+  isAgentControlEnabled?: boolean = false,
+  invalidateCache?: boolean = false
+): AgentSkillsResponse {
+  // fetches skills and includes agent conditionally
+}
+</code></pre></div></div>
+<p><br /></p>
+
+<h3 id="dragging-the-rest-of-the-team-down-with-you">Dragging the Rest of the Team Down With You</h3>
+<p>This is one of the worst functions I have ever seen in my life. Look at what we have done to the developers consuming this API. To simply fetch a fresh list of skills for an active agent with the control features turned on, this is what the call site looks like:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>getAgentSkills('org1', 'agent1', true, undefined, true, false)
+</code></pre></div></div>
+<p>A string of random booleans and an <code class="language-plaintext highlighter-rouge">undefined</code> placeholder just to satisfy the TypeScript compiler.</p>
+
+<p>It gets worse. Because our API is lying about its domain, consumers are forced to write defensive garbage code just to figure out what response they actually got back:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>const response = getAgentSkills(...);
+
+if (response.agent) {
+  // render active agent UI
+} else if (response.deletedAgent) {
+  // render deleted agent UI
+} else {
+  // Wait, what does this even mean? Did includeAgent fail? 
+}
+</code></pre></div></div>
+<p>Optional parameters didn’t remove complexity; they just pushed the cognitive load onto everyone else.
+<br /></p>
+
+<h3 id="the-path-to-redemption-and-how-rust-forces-it">The Path to Redemption (And How Rust Forces It)</h3>
+<p>When a function accumulates optional parameters like this, it’s a massive red flag that your domain model is muddy. The function is doing too much.</p>
+
+<p>Do we even need optional parameters at the language level? The creators of Rust didn’t think so. In Rust, there is no such thing as an optional function argument. If you tried to write our <code class="language-plaintext highlighter-rouge">getAgentSkills</code> function in Rust, the compiler would force you to design a strictly typed struct for your configuration, or force you to pass an explicit <code class="language-plaintext highlighter-rouge">Option</code> type.</p>
+
+<p>Instead of passing random booleans, Rust forces you to encapsulate the behavior. Applied to our TypeScript codebase, the virtuous approach looks like this:</p>
+
+<ol>
+  <li>
+    <p>Split the Execution Threads
+Fetching an active agent and fetching a deleted agent are fundamentally different operations. They deserve distinct functions: <code class="language-plaintext highlighter-rouge">getActiveAgentSkills()</code> and <code class="language-plaintext highlighter-rouge">getDeletedAgentSkills()</code>.</p>
+  </li>
+  <li>
+    <p>Use an Options Object for Modifiers
+For genuine behavioral modifiers, pass a single, strongly-typed configuration object instead of positional arguments.</p>
+  </li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface FetchSkillOptions {
+  includeAgentMetadata?: boolean;
+  invalidateCache?: boolean;
+  enableAgentControl?: boolean;
+}
+
+function getActiveAgentSkills(
+  orgId: string, 
+  agentId: string, 
+  options?: FetchSkillOptions
+): ActiveAgentResponse { ... }
+</code></pre></div></div>
+
+<p>Now, calling it is self-documenting:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>getActiveAgentSkills('org1', 'agent1', { invalidateCache: true }).
+</code></pre></div></div>
+
+<h3 id="the-two-golden-commandments-of-optional-parameters">The Two Golden Commandments of Optional Parameters</h3>
+<p>This isn’t to say optional parameters are fundamentally evil everywhere. But if you want to keep your codebase clean, you should strictly limit them to two scenarios:</p>
+
+<h4 id="1-enriching-or-formatting-the-response">1. Enriching or Formatting the Response</h4>
+<p>Use optional parameters when the core operation remains exactly the same, but the shape of the output changes. Think of CLI commands like <code class="language-plaintext highlighter-rouge">docker ps --format json</code>. The system is still listing containers; it’s just handing you the data differently.</p>
+
+<h4 id="2-overriding-function-defaults">2. Overriding Function Defaults</h4>
+<p>Use them to expose underlying knobs that usually don’t need to be touched, like <code class="language-plaintext highlighter-rouge">timeout=30ms</code> or <code class="language-plaintext highlighter-rouge">retries=3</code>.</p>
+
+<p><strong>The Unforgivable Sin</strong>: You should never use an optional parameter to change the execution thread. If passing <code class="language-plaintext highlighter-rouge">true</code> makes your function hit a different database table, execute a different business rule, or return a fundamentally different entity (like switching from an Active Agent to a Deleted Agent), you don’t need an optional parameter. You need a new function.
+<br /></p>
+
+<h3 id="conclusion-escaping-the-inferno">Conclusion: Escaping the Inferno</h3>
+<p>Optional parameters almost always start as a harmless convenience. But a parameter is rarely truly “optional”—it is a branching path in your logic. When you pile them up to control the flow of your program, you aren’t making your function more flexible; you are creating a combinatorial explosion of states that you, and your team, will eventually have to debug.</p>
+
+<p>Repent for your muddy domains. Write dumb functions. Keep your signatures strict. Your future self will thank you.</p>]]></content><author><name></name></author><summary type="html"><![CDATA[How optional parameters in function signatures lead to impossible states, hidden coupling, and fragile APIs—and better design alternatives.]]></summary></entry><entry><title type="html">The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer</title><link href="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html" rel="alternate" type="text/html" title="The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer" /><published>2025-08-21T04:08:00+00:00</published><updated>2025-08-21T04:08:00+00:00</updated><id>https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292</id><content type="html" xml:base="https://mofadlalla.io/2025/08/21/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292.html"><![CDATA[<p>Ever needed to generate a PDF invoice, a report, or an e-ticket from your web application? It’s a common requirement, but turning dynamic HTML into a pixel-perfect PDF can be surprisingly tricky.</p>
 
 <p>In this guide, we’ll walk you through the entire process of building a robust PDF generation script using Node.js and Puppeteer, a powerful headless browser tool. We’ll cover the basics and also touch on the real-world challenges you might face in a production environment.</p>
 
@@ -185,4 +359,4 @@ npm init <span class="nt">-y</span>
 
 <p>Generating PDFs from HTML doesn’t have to be a headache. By leveraging Puppeteer, you gain the full power of a modern browser to render your documents exactly as they appear on the web. We’ve moved from a basic script to a high-performance Express server, setting a solid foundation for any production environment.</p>
 
-<p>From here, you can explore adding custom headers and footers, handling complex CSS layouts, or even integrating this service into a larger microservices architecture. Happy coding!</p>]]></content><author><name></name></author><summary type="html"><![CDATA[The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer Posted on:...]]></summary></entry></feed>
+<p>From here, you can explore adding custom headers and footers, handling complex CSS layouts, or even integrating this service into a larger microservices architecture. Happy coding!</p>]]></content><author><name></name></author><summary type="html"><![CDATA[A practical, end-to-end guide to generating pixel-perfect PDFs from dynamic HTML using Node.js and Puppeteer in production.]]></summary></entry></feed>
