@@ -1,9 +1,8 @@
 ---
 layout: post
 title: 'The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer'
-description: 'The Ultimate Guide to Generating PDFs from HTML with Node.js and Puppeteer   Posted on:...'
+description: 'A practical, end-to-end guide to generating pixel-perfect PDFs from dynamic HTML using Node.js and Puppeteer in production.'
 date: 2025-08-21T04:08:00Z
-canonical_url: https://dev.to/mofadlalla/the-ultimate-guide-to-generating-pdfs-from-html-with-nodejs-and-puppeteer-2292
 ---
 
 Ever needed to generate a PDF invoice, a report, or an e-ticket from your web application? It's a common requirement, but turning dynamic HTML into a pixel-perfect PDF can be surprisingly tricky.
