@@ -51,21 +51,21 @@
   <div class="post-content e-content" itemprop="articleBody">
     <p>You are the main developer of agents.com, an app that lets an organization manage an army of AI agents. You’re designing an admin page where an admin within an org can see each agent and the skills associated with them. You write this beautiful, simple function that takes an <code class="language-plaintext highlighter-rouge">orgId</code> and <code class="language-plaintext highlighter-rouge">agentId</code> and returns a list of skills:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(orgId: string, agentId: string): AgentSkill[] {
-  // fetches all of the skills from the server
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span><span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">):</span> <span class="nx">AgentSkill</span><span class="p">[]</span> <span class="p">{</span>
+  <span class="c1">// fetches all of the skills from the server</span>
+<span class="p">}</span>
 </code></pre></div></div>
 
 <p>The skills page needs to show some metadata along with the list of skills. For example, we need to show the name of the agent, the date they were created, and their specialties. Because of this, we make a small change to the return type of this function:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
-  agent: Agent;
-  skills: Skill[];
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">interface</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="nl">agent</span><span class="p">:</span> <span class="nx">Agent</span><span class="p">;</span>
+  <span class="nl">skills</span><span class="p">:</span> <span class="nx">Skill</span><span class="p">[];</span>
+<span class="p">}</span>
 
-function getAgentSkills(orgId: string, agentId: string): AgentSkillsResponse {
-  // Some API calls
-}
+<span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span><span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">):</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="c1">// Some API calls</span>
+<span class="p">}</span>
 </code></pre></div></div>
 
 <p>So far, so good! The page looks great, and admins are happy tracking their agents’ contributions.
@@ -76,19 +76,19 @@ function getAgentSkills(orgId: string, agentId: string): AgentSkillsResponse {
 <p>However, you really don’t want to return the <code class="language-plaintext highlighter-rouge">agent</code> object with the response here because you already have the agent information handy in the state, and you want to save yourself a heavy database join in your backend.</p>
 
 <p>So, what do you do? You commit the first sin. You add a boolean optional parameter <code class="language-plaintext highlighter-rouge">includeAgent</code>. It defaults to true, and the overview page caller can just set it to false. Here is how your function looks now:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
-  orgId: string,
-  agentId: string,
-  includeAgent?: boolean = true
-): AgentSkillsResponse {
-  // fetches skills and includes agent conditionally
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span>
+  <span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">includeAgent</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">true</span>
+<span class="p">):</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="c1">// fetches skills and includes agent conditionally</span>
+<span class="p">}</span>
 </code></pre></div></div>
 <p>But wait, you also need to update the function return type because the agent is now optional:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
-  agent?: Agent;
-  skills: Skill[];
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">interface</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="nl">agent</span><span class="p">?:</span> <span class="nx">Agent</span><span class="p">;</span>
+  <span class="nl">skills</span><span class="p">:</span> <span class="nx">Skill</span><span class="p">[];</span>
+<span class="p">}</span>
 </code></pre></div></div>
 <p>Not bad, right? We’ll see.
 <br /></p>
@@ -98,20 +98,20 @@ function getAgentSkills(orgId: string, agentId: string): AgentSkillsResponse {
 <p>The first feature they work on is the UI for “deleted” agents. When an agent is deleted, you free up their username so new agents can use it. But new agents can be deleted as well! Your backend has a clever solution for this: you store a <code class="language-plaintext highlighter-rouge">deletionTimeStamp</code> to identify multiple agents deleted with the exact same username.</p>
 
 <p>Your new developer wants to support showing skills for deleted agents on the skills page. What do they do? They pass a <code class="language-plaintext highlighter-rouge">deletedAt</code> param into your existing function. Because of data retention regulations, you don’t store a lot of information about deleted agents, so the response shape is a bit different.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface AgentSkillsResponse {
-  agent?: Agent;
-  deletedAgent?: DeletedAgent;
-  skills: Skill[];
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">interface</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="nl">agent</span><span class="p">?:</span> <span class="nx">Agent</span><span class="p">;</span>
+  <span class="nl">deletedAgent</span><span class="p">?:</span> <span class="nx">DeletedAgent</span><span class="p">;</span>
+  <span class="nl">skills</span><span class="p">:</span> <span class="nx">Skill</span><span class="p">[];</span>
+<span class="p">}</span>
 
-function getAgentSkills(
-  orgId: string,
-  agentId: string,
-  includeAgent?: boolean = true,
-  deletedAt?: DateTime,
-): AgentSkillsResponse {
-  // fetches skills and includes agent conditionally
-}
+<span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span>
+  <span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">includeAgent</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nx">deletedAt</span><span class="p">?:</span> <span class="nx">DateTime</span><span class="p">,</span>
+<span class="p">):</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="c1">// fetches skills and includes agent conditionally</span>
+<span class="p">}</span>
 </code></pre></div></div>
 <p>Look closely at this function. The good news is that it returns a list of skills. But does it include an active agent or a deleted agent? Only God knows. Even worse, an agent cannot be active and deleted at the same time. What happens when someone passes <code class="language-plaintext highlighter-rouge">includeAgent=true</code> and <code class="language-plaintext highlighter-rouge">deletedAt=Date(SOME_DATE)</code> ? The function signature allows an impossible state.
 <br /></p>
@@ -121,15 +121,15 @@ function getAgentSkills(
 
 <p>When this feature is enabled, you expect the agent object to include more attributes—for example, <code class="language-plaintext highlighter-rouge">allowed_tools</code>, <code class="language-plaintext highlighter-rouge">memory_config</code>, and <code class="language-plaintext highlighter-rouge">guardrail_profile_id</code>. So, you add another optional parameter.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
-  orgId: string,
-  agentId: string,
-  includeAgent?: boolean = true,
-  deletedAt?: DateTime,
-  isAgentControlEnabled: boolean = false,
-): AgentSkillsResponse {
-  // fetches skills and includes agent conditionally
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span>
+  <span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">includeAgent</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nx">deletedAt</span><span class="p">?:</span> <span class="nx">DateTime</span><span class="p">,</span>
+  <span class="nx">isAgentControlEnabled</span><span class="p">:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+<span class="p">):</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="c1">// fetches skills and includes agent conditionally</span>
+<span class="p">}</span>
 </code></pre></div></div>
 
 <p>Keep in mind, the <code class="language-plaintext highlighter-rouge">isAgentControlEnabled</code> param is only relevant when fetching active agents. Deleted agents will always return the minimum response. This function already looks terrible, but there’s no turning back now.</p>
@@ -139,36 +139,36 @@ function getAgentSkills(
 
 <p>What do you do to our function? I think you know the answer by now.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>function getAgentSkills(
-  orgId: string,
-  agentId: string,
-  includeAgent?: boolean = true,
-  deletedAt?: DateTime,
-  isAgentControlEnabled?: boolean = false,
-  invalidateCache?: boolean = false
-): AgentSkillsResponse {
-  // fetches skills and includes agent conditionally
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">getAgentSkills</span><span class="p">(</span>
+  <span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span>
+  <span class="nx">includeAgent</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nx">deletedAt</span><span class="p">?:</span> <span class="nx">DateTime</span><span class="p">,</span>
+  <span class="nx">isAgentControlEnabled</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nx">invalidateCache</span><span class="p">?:</span> <span class="nx">boolean</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="p">):</span> <span class="nx">AgentSkillsResponse</span> <span class="p">{</span>
+  <span class="c1">// fetches skills and includes agent conditionally</span>
+<span class="p">}</span>
 </code></pre></div></div>
 <p><br /></p>
 
 <h3 id="dragging-the-rest-of-the-team-down-with-you">Dragging the Rest of the Team Down With You</h3>
 <p>This is one of the worst functions I have ever seen in my life. Look at what we have done to the developers consuming this API. To simply fetch a fresh list of skills for an active agent with the control features turned on, this is what the call site looks like:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>getAgentSkills('org1', 'agent1', true, undefined, true, false)
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">getAgentSkills</span><span class="p">(</span><span class="dl">'</span><span class="s1">org1</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">agent1</span><span class="dl">'</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">undefined</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
 </code></pre></div></div>
 <p>A string of random booleans and an <code class="language-plaintext highlighter-rouge">undefined</code> placeholder just to satisfy the TypeScript compiler.</p>
 
 <p>It gets worse. Because our API is lying about its domain, consumers are forced to write defensive garbage code just to figure out what response they actually got back:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>const response = getAgentSkills(...);
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">getAgentSkills</span><span class="p">(...);</span>
 
-if (response.agent) {
-  // render active agent UI
-} else if (response.deletedAgent) {
-  // render deleted agent UI
-} else {
-  // Wait, what does this even mean? Did includeAgent fail? 
-}
+<span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">agent</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// render active agent UI</span>
+<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">deletedAgent</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// render deleted agent UI</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="c1">// Wait, what does this even mean? Did includeAgent fail? </span>
+<span class="p">}</span>
 </code></pre></div></div>
 <p>Optional parameters didn’t remove complexity; they just pushed the cognitive load onto everyone else.
 <br /></p>
@@ -191,21 +191,21 @@ For genuine behavioral modifiers, pass a single, strongly-typed configuration ob
   </li>
 </ol>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>interface FetchSkillOptions {
-  includeAgentMetadata?: boolean;
-  invalidateCache?: boolean;
-  enableAgentControl?: boolean;
-}
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">interface</span> <span class="nx">FetchSkillOptions</span> <span class="p">{</span>
+  <span class="nl">includeAgentMetadata</span><span class="p">?:</span> <span class="nx">boolean</span><span class="p">;</span>
+  <span class="nl">invalidateCache</span><span class="p">?:</span> <span class="nx">boolean</span><span class="p">;</span>
+  <span class="nl">enableAgentControl</span><span class="p">?:</span> <span class="nx">boolean</span><span class="p">;</span>
+<span class="p">}</span>
 
-function getActiveAgentSkills(
-  orgId: string, 
-  agentId: string, 
-  options?: FetchSkillOptions
-): ActiveAgentResponse { ... }
+<span class="kd">function</span> <span class="nx">getActiveAgentSkills</span><span class="p">(</span>
+  <span class="nx">orgId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> 
+  <span class="nx">agentId</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> 
+  <span class="nx">options</span><span class="p">?:</span> <span class="nx">FetchSkillOptions</span>
+<span class="p">):</span> <span class="nx">ActiveAgentResponse</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
 </code></pre></div></div>
 
 <p>Now, calling it is self-documenting:</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>getActiveAgentSkills('org1', 'agent1', { invalidateCache: true }).
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">getActiveAgentSkills</span><span class="p">(</span><span class="dl">'</span><span class="s1">org1</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">agent1</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">invalidateCache</span><span class="p">:</span> <span class="kc">true</span> <span class="p">});</span>
 </code></pre></div></div>
 
 <h3 id="the-two-golden-commandments-of-optional-parameters">The Two Golden Commandments of Optional Parameters</h3>
