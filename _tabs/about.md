@@ -1,7 +1,8 @@
 ---
 layout: page
 title: About
-permalink: /about/
+icon: fas fa-info-circle
+order: 4
 ---
 
 Hi, I'm **Mohamed Fadlalla**.
@@ -16,7 +17,7 @@ By day, I work on large-scale distributed systems. By night, I am an indie hacke
 
 Currently, I am building a **Cloud-Native Video Engine** for programmatic animation. It uses **Docker-in-Docker** isolation and **AI** to allow developers to generate complex mathematical animations (using Manim) directly from the browser.
 
-_(If you are interested in the technical challenges of running untrusted Python code in ephemeral containers, check out my [blog](/)._
+_(If you are interested in the technical challenges of running untrusted Python code in ephemeral containers, check out my [blog](/))._
 
 ### 🚀 Past Projects
 
@@ -34,9 +35,3 @@ When I'm not pushing commits, I am usually:
 ### 📫 Connect
 
 I love chatting with other engineers and founders. Feel free to reach out if you want to talk about **SaaS**, **System Design**, or **Docker scaling**.
-
-<ul>
-  <li><a href="https://github.com/mofadlalla" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-  <li><a href="https://twitter.com/mofadlalla" target="_blank" rel="noopener noreferrer">Twitter / X</a></li>
-  <li><a href="https://linkedin.com/in/mofadlalla" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-</ul>

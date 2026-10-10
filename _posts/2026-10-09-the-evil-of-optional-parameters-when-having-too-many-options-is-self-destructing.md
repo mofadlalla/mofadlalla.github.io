@@ -3,6 +3,8 @@ layout: post
 title: 'The Evil of Optional Parameters: When Having too Many Options is Self Destructing'
 description: 'How optional parameters in function signatures lead to impossible states, hidden coupling, and fragile APIs—and better design alternatives.'
 date: 2026-10-09 20:50:00 -0400
+categories: [Architecture, TypeScript]
+tags: [typescript, system-design, api-design, clean-code]
 ---
 
 You are the main developer of agents.com, an app that lets an organization manage an army of AI agents. You’re designing an admin page where an admin within an org can see each agent and the skills associated with them. You write this beautiful, simple function that takes an `orgId` and `agentId` and returns a list of skills:
