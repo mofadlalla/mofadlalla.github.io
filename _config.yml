@@ -41,3 +41,11 @@ exclude:
 # Jekyll Admin
 jekyll_admin:
   homepage: "posts"
+
+# Front matter defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
