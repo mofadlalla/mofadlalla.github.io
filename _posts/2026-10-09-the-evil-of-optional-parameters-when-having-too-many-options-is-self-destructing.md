@@ -7,7 +7,7 @@ date: 2026-10-09 20:50:00 -0400
 
 You are the main developer of agents.com, an app that lets an organization manage an army of AI agents. You’re designing an admin page where an admin within an org can see each agent and the skills associated with them. You write this beautiful, simple function that takes an `orgId` and `agentId` and returns a list of skills:
 
-```
+```typescript
 function getAgentSkills(orgId: string, agentId: string): AgentSkill[] {
   // fetches all of the skills from the server
 }
@@ -15,7 +15,7 @@ function getAgentSkills(orgId: string, agentId: string): AgentSkill[] {
 
 The skills page needs to show some metadata along with the list of skills. For example, we need to show the name of the agent, the date they were created, and their specialties. Because of this, we make a small change to the return type of this function:
 
-```
+```typescript
 interface AgentSkillsResponse {
   agent: Agent;
   skills: Skill[];
@@ -34,7 +34,7 @@ The agent section contains more than just a list of skills. You have independent
 However, you really don't want to return the `agent` object with the response here because you already have the agent information handy in the state, and you want to save yourself a heavy database join in your backend.
 
 So, what do you do? You commit the first sin. You add a boolean optional parameter `includeAgent`. It defaults to true, and the overview page caller can just set it to false. Here is how your function looks now:
-```
+```typescript
 function getAgentSkills(
   orgId: string,
   agentId: string,
@@ -44,7 +44,7 @@ function getAgentSkills(
 }
 ```
 But wait, you also need to update the function return type because the agent is now optional:
-```
+```typescript
 interface AgentSkillsResponse {
   agent?: Agent;
   skills: Skill[];
@@ -58,7 +58,7 @@ Months later, your app is doing great. You are getting feature requests left and
 The first feature they work on is the UI for "deleted" agents. When an agent is deleted, you free up their username so new agents can use it. But new agents can be deleted as well! Your backend has a clever solution for this: you store a `deletionTimeStamp` to identify multiple agents deleted with the exact same username.
 
 Your new developer wants to support showing skills for deleted agents on the skills page. What do they do? They pass a `deletedAt` param into your existing function. Because of data retention regulations, you don't store a lot of information about deleted agents, so the response shape is a bit different.
-```
+```typescript
 interface AgentSkillsResponse {
   agent?: Agent;
   deletedAgent?: DeletedAgent;
@@ -82,7 +82,7 @@ As your business grows, you start allowing users to have more control over agent
 
 When this feature is enabled, you expect the agent object to include more attributes—for example, `allowed_tools`, `memory_config`, and `guardrail_profile_id`. So, you add another optional parameter.
 
-```
+```typescript
 function getAgentSkills(
   orgId: string,
   agentId: string,
@@ -101,7 +101,7 @@ Believe it or not, there are cases where optional parameters actually seem compl
 
 What do you do to our function? I think you know the answer by now.
 
-```
+```typescript
 function getAgentSkills(
   orgId: string,
   agentId: string,
@@ -117,14 +117,14 @@ function getAgentSkills(
 
 ### Dragging the Rest of the Team Down With You
 This is one of the worst functions I have ever seen in my life. Look at what we have done to the developers consuming this API. To simply fetch a fresh list of skills for an active agent with the control features turned on, this is what the call site looks like:
-```
+```typescript
 getAgentSkills('org1', 'agent1', true, undefined, true, false)
 ```
 A string of random booleans and an `undefined` placeholder just to satisfy the TypeScript compiler.
 
 It gets worse. Because our API is lying about its domain, consumers are forced to write defensive garbage code just to figure out what response they actually got back:
 
-```
+```typescript
 const response = getAgentSkills(...);
 
 if (response.agent) {
@@ -151,7 +151,7 @@ Fetching an active agent and fetching a deleted agent are fundamentally differen
 2. Use an Options Object for Modifiers
 For genuine behavioral modifiers, pass a single, strongly-typed configuration object instead of positional arguments.
 
-```
+```typescript
 interface FetchSkillOptions {
   includeAgentMetadata?: boolean;
   invalidateCache?: boolean;
@@ -166,8 +166,8 @@ function getActiveAgentSkills(
 ```
 
 Now, calling it is self-documenting:
-```
-getActiveAgentSkills('org1', 'agent1', { invalidateCache: true }).
+```typescript
+getActiveAgentSkills('org1', 'agent1', { invalidateCache: true });
 ```
 
 ### The Two Golden Commandments of Optional Parameters
